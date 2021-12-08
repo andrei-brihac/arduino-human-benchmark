@@ -1,30 +1,64 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
-#include "SetupConstants.h"
 #include "LcdUI.h"
+#include "SetupConstants.h"
+#include "Menus.h"
 
-// --------------------------------------------------------------
-// -------------------- LCD Menu Definitions --------------------
-// --------------------------------------------------------------
 LiquidCrystal lcd(pinRS, pinEnable, pinD4, pinD5, pinD6, pinD7);
-const uint8_t nrOfMenus = 3;
-uint8_t currentMenu = 0;
-LcdMenu mainMenu(new LcdText(0, 0, "Main Menu"), 3, new LcdText[3]{LcdText(0, 1, "Start Game"), LcdText(0, 1, "User Menu"), LcdText(0, 1, "Score")});
-LcdMenu userMenu(new LcdText(0, 0, "User Settings"), 2, new LcdText[2]{LcdText(0, 1, "Create User"), LcdText(0, 1, "Delete User")});
-LcdMenu scoreMenu(new LcdText(0, 0, "Score"), 2, new LcdText[2]{LcdText(0, 1, "High Score"), LcdText(0, 1, "Reset")});
-LcdMenu menus[nrOfMenus] = {mainMenu, userMenu, scoreMenu};
+uint16_t lcdContrast = 350;
+
+LcdMenu* currentMenu;
+uint8_t currentMenuType;
+unsigned long long lastMenuChange;
+uint16_t menuChangeDelay = 200;
+
+uint16_t joyVxRead;
+uint16_t joyVyRead;
+bool joyMoved = false;
 
 void setup() {
+  pinMode(pinContrast, OUTPUT);
+  analogWrite(pinContrast, lcdContrast);
+
+  pinMode(pinJoyVx, INPUT);
+  pinMode(pinJoyVy, INPUT);
+  pinMode(pinJoyBttn, INPUT_PULLUP);
+
   lcd.createChar(arrowLeftNum, arrowLeft);
   lcd.createChar(arrowRightNum, arrowRight);
+  lcd.begin(lcdColNum, lcdRowNum);
   LcdMenu::arrowLeftNum = arrowLeftNum;
   LcdMenu::arrowRightNum = arrowRightNum;
-  lcd.begin(lcdColNum, lcdRowNum);
-  pinMode(pinContrast, OUTPUT);
-  menus[currentMenu].displayMenu(lcd);
-  analogWrite(pinContrast, 350);
+  
+  initMenus();
+  currentMenu = menuMain;
+  currentMenuType = MENU_TYPES::NAV;
+  currentMenu->display(lcd);
+
+  Serial.begin(9600);
 }
 
 void loop() {
+  handleLcdMenu();
+}
 
+void handleLcdMenu() {
+  if (currentMenuType == MENU_TYPES::NAV) {
+    String joyState = currentMenu->handleJoyMove(analogRead(pinJoyVy), joyMoved);
+    if (joyState == "moved") {
+      currentMenu->display(lcd);
+    }
+    LcdMenu* newMenu = currentMenu->handleJoyPress(digitalRead(pinJoyBttn));
+    if (newMenu && millis() - lastMenuChange > menuChangeDelay) {
+      currentMenu = newMenu;
+      currentMenu->display(lcd);
+      lastMenuChange = millis();
+    }
+  }
+  if (currentMenuType == MENU_TYPES::IN) {
+    // do something
+  }
+  if (currentMenuType == MENU_TYPES::GAME) {
+    // do something
+  }
 }

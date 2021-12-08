@@ -30,4 +30,8 @@ byte arrowRight[8] = {
   B10000
 };
 
+const uint8_t pinJoyVx = A0;
+const uint8_t pinJoyVy = A1;
+const uint8_t pinJoyBttn = 7;
+
 #endif
