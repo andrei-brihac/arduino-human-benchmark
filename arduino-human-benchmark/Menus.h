@@ -2,6 +2,7 @@
 #define MENUS_H
 
 #include "LcdUI.h"
+#include "MenuVariables.h"
 
 enum MENU_TYPES {
   NAV, IN, GAME
@@ -38,7 +39,8 @@ void initMenus() {
     new LcdText(0, 0, "LCD Contrast"),
     MENU_TYPES::IN,
     new LcdInputBox(0, 1, "350"),
-    menuMain
+    menuMain,
+    &setLcdContrast
   );
   menuSettings = new LcdNav(
     new LcdText(0, 0, "Settings"),

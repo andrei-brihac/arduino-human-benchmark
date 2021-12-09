@@ -39,11 +39,15 @@ class LcdButton : public LcdText {
 };
 
 class LcdInputBox : public LcdText {
+  static String alphabet;
   private:
     short currChar;
   public:
     LcdInputBox(uint8_t col, uint8_t row, String text);
-    short getCurrChar();
+    char getCurrCharLetter();
+    void setCurrCharLetter(char newChar);
+    static char findNextCharInAlphabet(char c);
+    static char findPrecedingCharInAlphabet(char c);
   friend class LcdInput;
 };
 
@@ -87,8 +91,9 @@ class LcdInput : public LcdMenu {
   private:
     LcdInputBox* input;
     LcdMenu* prevMenu;
+    void (*func)(String);
   public:
-    LcdInput(LcdText* title=nullptr, uint8_t type=-1, LcdInputBox* input=nullptr, LcdMenu* prevMenu=nullptr);
+    LcdInput(LcdText* title=nullptr, uint8_t type=-1, LcdInputBox* input=nullptr, LcdMenu* prevMenu=nullptr, void (*func)(String)=nullptr);
     void display(LiquidCrystal& lcd);
     String handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t minThresh=350, uint16_t maxThresh=750);
     LcdMenu* handleJoyPress(bool buttonState);

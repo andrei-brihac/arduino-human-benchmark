@@ -5,12 +5,10 @@
 #include "Menus.h"
 
 LiquidCrystal lcd(pinRS, pinEnable, pinD4, pinD5, pinD6, pinD7);
-uint16_t lcdContrast = 350;
-
 LcdMenu* currentMenu;
 bool drawMenu = false;
 unsigned long long lastMenuChange;
-uint16_t menuChangeDelay = 300;
+uint16_t menuChangeDelay = 200;
 
 bool joyMoved = false;
 
@@ -40,18 +38,23 @@ void loop() {
 
 void handleLcdMenu() {
   // returns 'moved' only when the joyMoved variable transitions from false to true --> this is a signal to draw the modified menu
-  String joyState = currentMenu->handleJoyMove(analogRead(pinJoyVy), analogRead(pinJoyVx), joyMoved);
+  uint16_t vxRead = analogRead(pinJoyVx);
+  uint16_t vyRead = analogRead(pinJoyVy);
+  String joyState = currentMenu->handleJoyMove(vyRead, vxRead, joyMoved);  // inversed reads because of the way I'm holding the joystick
   if (joyState == "moved") {
       drawMenu = true;
   }
   // returns null if button is not pressed or the current menu button doesn't do anything
   // returns a pointer to the chosen menu when the button is pressed
   // so when the pointer is not null it's a signal that a new menu must be drawn
-  LcdMenu* newMenu = currentMenu->handleJoyPress(digitalRead(pinJoyBttn));
-  if (newMenu && millis() - lastMenuChange > menuChangeDelay) {
-      currentMenu = newMenu;
-      drawMenu = true;
-      lastMenuChange = millis();
+  bool buttonState = digitalRead(pinJoyBttn);
+  if (millis() - lastMenuChange > menuChangeDelay) {  // look for button input a short delay after changing menus
+    LcdMenu* newMenu = currentMenu->handleJoyPress(buttonState);
+    if (newMenu) {
+        currentMenu = newMenu;
+        drawMenu = true;
+        lastMenuChange = millis();
+    }
   }
   // didn't manage to use typeid correctly, so I'm just saving the menu type inside each object - 1 byte of memory is lost :(
   uint8_t currentMenuType = currentMenu->getType();

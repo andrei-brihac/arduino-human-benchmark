@@ -44,9 +44,37 @@ void LcdButton::setTargetMenu(LcdMenu* targetMenu) {
 // --------------------------------------------------------------
 // -------------- LcdInputBox Function Definitions --------------
 // --------------------------------------------------------------
+String LcdInputBox::alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+
 LcdInputBox::LcdInputBox(uint8_t col, uint8_t row, String text) : LcdText(col, row, text) {
   this->center();
   this->currChar = 0;
+}
+
+void LcdInputBox::setCurrCharLetter(char newChar) {
+  this->text[currChar] = newChar;
+}
+
+char LcdInputBox::getCurrCharLetter() {
+  return this->text[currChar];
+}
+
+char LcdInputBox::findNextCharInAlphabet(char c) {
+  uint8_t alphabetIdx = LcdInputBox::alphabet.indexOf(c);
+  alphabetIdx++;
+  if (alphabetIdx == alphabet.length()) {
+    alphabetIdx = 0;
+  }
+  return alphabet[alphabetIdx];
+}
+
+char LcdInputBox::findPrecedingCharInAlphabet(char c) {
+  uint8_t alphabetIdx = LcdInputBox::alphabet.indexOf(c);
+  alphabetIdx--;
+  if (alphabetIdx < 0) {
+    alphabetIdx = alphabet.length() - 1;
+  }
+  return alphabet[alphabetIdx];
 }
 // --------------------------------------------------------------
 // ---------------- LcdMenu Function Definitions ----------------
@@ -76,7 +104,6 @@ LcdNav::LcdNav(LcdText* title, uint8_t type, uint8_t nrOfOptions, LcdButton* opt
   this->options = options;
   this->currentOption = 0;
   if (centered) {
-      this->title->center();
       for (uint8_t i = 0; i < nrOfOptions; i++) {
           options[i].center();
       }
@@ -148,9 +175,10 @@ uint16_t LcdInput::blinkDelay = 500;
 unsigned long long LcdInput::lastBlinked = 0;
 bool LcdInput::blinked = false;
 
-LcdInput::LcdInput(LcdText* title, uint8_t type, LcdInputBox* input, LcdMenu* prevMenu) : LcdMenu(title, type) {
+LcdInput::LcdInput(LcdText* title, uint8_t type, LcdInputBox* input, LcdMenu* prevMenu, void (*func)(String)) : LcdMenu(title, type) {
   this->input = input;
   this->prevMenu = prevMenu;
+  this->func = func;
 }
 
 void LcdInput::display(LiquidCrystal& lcd) {
@@ -175,26 +203,55 @@ String LcdInput::handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t 
    *  the return value is used to draw the menu only when the user completes a valid joystick move
    *  modifies the joyMoved variable declared in the main .ino file - this is needed because the method is called inside loop()
    */
-  if (!joyMoved && x < minThresh) {
-      joyMoved = true;
-      this->input->currChar--;
-      if (this->input->currChar < 0) {this->input->currChar = this->input->getText().length() - 1;}
-      return "moved";
-  }
-  if (!joyMoved && x > maxThresh) {
-      joyMoved = true;
-      this->input->currChar++;
-      if (this->input->currChar == this->input->getText().length()) {this->input->currChar = 0;}
-      return "moved";
-  }
-  if (joyMoved && x >= minThresh && x <= maxThresh) {
+  uint16_t xDefault = 460;
+  uint16_t yDefault = 472;
+  uint16_t errorMargin = 10;
+  // x-axis input for changing current character position
+  if (y >= yDefault - errorMargin && y <= yDefault + errorMargin) {
+    if (!joyMoved && x < minThresh) {
+        joyMoved = true;
+        this->input->currChar--;
+        if (this->input->currChar < 0) {this->input->currChar = this->input->getText().length() - 1;}
+        return "moved";
+    }
+    if (!joyMoved && x > maxThresh) {
+        joyMoved = true;
+        this->input->currChar++;
+        if (this->input->currChar == this->input->getText().length()) {this->input->currChar = 0;}
+        return "moved";
+    }
+    if (joyMoved && x >= minThresh && x <= maxThresh) {
       joyMoved = false;
+    }
+  }
+  // y-axis input for changing current character value
+  if (x >= xDefault - errorMargin && x <= xDefault + errorMargin) {
+    if (!joyMoved && y < minThresh) {
+        joyMoved = true;
+        // go to preceding char in alphabet of current char
+        char precedingChar = LcdInputBox::findPrecedingCharInAlphabet(this->input->getCurrCharLetter());
+        this->input->setCurrCharLetter(precedingChar);
+        return "moved";
+    }
+    if (!joyMoved && y > maxThresh) {
+        joyMoved = true;
+        // go to next char in alphabet of current char
+        char nextChar = LcdInputBox::findNextCharInAlphabet(this->input->getCurrCharLetter());
+        this->input->setCurrCharLetter(nextChar);
+        return "moved";
+    }
+    if (joyMoved && y >= minThresh && y <= maxThresh) {
+        joyMoved = false;
+    }
   }
   return "idle";
 }
 
 LcdMenu* LcdInput::handleJoyPress(bool buttonState) {
-  if (buttonState == LOW) {return prevMenu;}
+  if (buttonState == LOW) {
+    func(this->input->getText());
+    return prevMenu;
+  }
   return nullptr;
 }
 
