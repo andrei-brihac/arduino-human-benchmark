@@ -14,7 +14,7 @@ bool joyMoved = false;
 
 void setup() {
   pinMode(pinContrast, OUTPUT);
-  analogWrite(pinContrast, lcdContrast);
+  analogWrite(pinContrast, lcdContrast.toInt());
 
   pinMode(pinJoyVx, INPUT);
   pinMode(pinJoyVy, INPUT);
@@ -70,7 +70,7 @@ void handleLcdMenu() {
   // if a signal to draw the menu has been received from moving or pressing the joystick, then we draw it and signal that it has been drawn
   if (drawMenu) {
     currentMenu->display(lcd);
-    analogWrite(pinContrast, lcdContrast);
+    analogWrite(pinContrast, lcdContrast.toInt());
     drawMenu = false;
   }
 }

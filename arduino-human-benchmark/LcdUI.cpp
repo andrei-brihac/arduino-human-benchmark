@@ -44,7 +44,7 @@ void LcdButton::setTargetMenu(LcdMenu* targetMenu) {
 // --------------------------------------------------------------
 // -------------- LcdInputBox Function Definitions --------------
 // --------------------------------------------------------------
-String LcdInputBox::alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+String LcdInputBox::alphabet = "abcdefghijklmnopqrstuvwxyz0123456789 ";
 
 LcdInputBox::LcdInputBox(uint8_t col, uint8_t row, String text) : LcdText(col, row, text) {
   this->center();

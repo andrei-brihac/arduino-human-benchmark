@@ -2,25 +2,31 @@
 #define MENUS_H
 
 #include "LcdUI.h"
-#include "MenuVariables.h"
+#include "GameVariables.h"
 
 enum MENU_TYPES {
   NAV, IN, GAME
 };
 
 LcdMenu *menuMain, *menuSettings, *menuUser, *menuScore, *menuAbout;  // nav menus
-LcdMenu *menuContrast;  // input menus
+LcdMenu *menuContrast, *menuUserSet;  // input menus
 // check each menu class constructor to see how to declare a menu
 
 LcdButton bttnMainMenu(0, 1, "Main Menu");
 void initMenus() {
+  menuUserSet = new LcdInput(
+    new LcdText(0, 0, "Set Username"),
+    MENU_TYPES::IN,
+    new LcdInputBox(0, 1, userName),
+    menuMain,
+    &setUserName
+  );
   menuUser = new LcdNav(
     new LcdText(0, 0, "User Settings"),
     MENU_TYPES::NAV,
-    4,
-    new LcdButton[4]{
-      LcdButton(0, 1, "Create User"),
-      LcdButton(0, 1, "Chose User"),
+    3,
+    new LcdButton[3]{
+      LcdButton(0, 1, "Set Username", menuUserSet),
       LcdButton(0, 1, "Delete User"),
       bttnMainMenu
     }
@@ -38,7 +44,7 @@ void initMenus() {
   menuContrast = new LcdInput(
     new LcdText(0, 0, "LCD Contrast"),
     MENU_TYPES::IN,
-    new LcdInputBox(0, 1, "350"),
+    new LcdInputBox(0, 1, lcdContrast),
     menuMain,
     &setLcdContrast
   );
@@ -84,6 +90,7 @@ void initMenus() {
   ((LcdNav*)menuAbout)->setBackBttn(bttnMainMenu);
 
   ((LcdInput*)menuContrast)->setPrevMenu(menuMain);
+  ((LcdInput*)menuUserSet)->setPrevMenu(menuMain);
 }
 
 #endif
