@@ -8,12 +8,10 @@ LiquidCrystal lcd(pinRS, pinEnable, pinD4, pinD5, pinD6, pinD7);
 uint16_t lcdContrast = 350;
 
 LcdMenu* currentMenu;
-uint8_t currentMenuType;
+bool drawMenu = false;
 unsigned long long lastMenuChange;
-uint16_t menuChangeDelay = 200;
+uint16_t menuChangeDelay = 300;
 
-uint16_t joyVxRead;
-uint16_t joyVyRead;
 bool joyMoved = false;
 
 void setup() {
@@ -27,12 +25,10 @@ void setup() {
   lcd.createChar(arrowLeftNum, arrowLeft);
   lcd.createChar(arrowRightNum, arrowRight);
   lcd.begin(lcdColNum, lcdRowNum);
-  LcdMenu::arrowLeftNum = arrowLeftNum;
-  LcdMenu::arrowRightNum = arrowRightNum;
+  LcdNav::initArrows(arrowLeftNum, arrowRightNum);
   
   initMenus();
   currentMenu = menuMain;
-  currentMenuType = MENU_TYPES::NAV;
   currentMenu->display(lcd);
 
   Serial.begin(9600);
@@ -43,22 +39,35 @@ void loop() {
 }
 
 void handleLcdMenu() {
-  if (currentMenuType == MENU_TYPES::NAV) {
-    String joyState = currentMenu->handleJoyMove(analogRead(pinJoyVy), joyMoved);
-    if (joyState == "moved") {
-      currentMenu->display(lcd);
-    }
-    LcdMenu* newMenu = currentMenu->handleJoyPress(digitalRead(pinJoyBttn));
-    if (newMenu && millis() - lastMenuChange > menuChangeDelay) {
+  // returns 'moved' only when the joyMoved variable transitions from false to true --> this is a signal to draw the modified menu
+  String joyState = currentMenu->handleJoyMove(analogRead(pinJoyVy), analogRead(pinJoyVx), joyMoved);
+  if (joyState == "moved") {
+      drawMenu = true;
+  }
+  // returns null if button is not pressed or the current menu button doesn't do anything
+  // returns a pointer to the chosen menu when the button is pressed
+  // so when the pointer is not null it's a signal that a new menu must be drawn
+  LcdMenu* newMenu = currentMenu->handleJoyPress(digitalRead(pinJoyBttn));
+  if (newMenu && millis() - lastMenuChange > menuChangeDelay) {
       currentMenu = newMenu;
-      currentMenu->display(lcd);
+      drawMenu = true;
       lastMenuChange = millis();
-    }
+  }
+  // didn't manage to use typeid correctly, so I'm just saving the menu type inside each object - 1 byte of memory is lost :(
+  uint8_t currentMenuType = currentMenu->getType();
+  if (currentMenuType == MENU_TYPES::NAV) {
+    lcd.noBlink();  // make sure the cursor isn't blinking after exiting an input menu
   }
   if (currentMenuType == MENU_TYPES::IN) {
-    // do something
+    ((LcdInput*)currentMenu)->blinkCursor(lcd);  // blink the cursor at the chosen location
   }
   if (currentMenuType == MENU_TYPES::GAME) {
     // do something
+  }
+  // if a signal to draw the menu has been received from moving or pressing the joystick, then we draw it and signal that it has been drawn
+  if (drawMenu) {
+    currentMenu->display(lcd);
+    analogWrite(pinContrast, lcdContrast);
+    drawMenu = false;
   }
 }

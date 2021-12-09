@@ -7,66 +7,81 @@ enum MENU_TYPES {
   NAV, IN, GAME
 };
 
-LcdMenu *menuMain, *menuSettings, *menuUser, *menuScore, *menuAbout;
+LcdMenu *menuMain, *menuSettings, *menuUser, *menuScore, *menuAbout;  // nav menus
+LcdMenu *menuContrast;  // input menus
+// check each menu class constructor to see how to declare a menu
 
-LcdText bttnMainMenu(0, 1, "Main Menu");
+LcdButton bttnMainMenu(0, 1, "Main Menu");
 void initMenus() {
   menuUser = new LcdNav(
     new LcdText(0, 0, "User Settings"),
+    MENU_TYPES::NAV,
     4,
-    new LcdText[4]{
-      LcdText(0, 1, "Create User"),
-      LcdText(0, 1, "Chose User"),
-      LcdText(0, 1, "Delete User"),
+    new LcdButton[4]{
+      LcdButton(0, 1, "Create User"),
+      LcdButton(0, 1, "Chose User"),
+      LcdButton(0, 1, "Delete User"),
       bttnMainMenu
     }
   );
   menuScore = new LcdNav(
     new LcdText(0, 0, "Score"),
+    MENU_TYPES::NAV,
     3,
-    new LcdText[3]{
-      LcdText(0, 1, "High Score"),
-      LcdText(0, 1, "Reset"),
+    new LcdButton[3]{
+      LcdButton(0, 1, "High Score"),
+      LcdButton(0, 1, "Reset"),
       bttnMainMenu
     }
   );
+  menuContrast = new LcdInput(
+    new LcdText(0, 0, "LCD Contrast"),
+    MENU_TYPES::IN,
+    new LcdInputBox(0, 1, "350"),
+    menuMain
+  );
   menuSettings = new LcdNav(
     new LcdText(0, 0, "Settings"),
+    MENU_TYPES::NAV,
     4,
-    new LcdText[4]{
-      LcdText(0, 1, "LCD Contrast"),
-      LcdText(0, 1, "LCD Brightness"),
-      LcdText(0, 1, "LED Brightness"),
+    new LcdButton[4]{
+      LcdButton(0, 1, "LCD Contrast", menuContrast),
+      LcdButton(0, 1, "LCD Brightness"),
+      LcdButton(0, 1, "LED Brightness"),
       bttnMainMenu
     }
   );
   menuAbout = new LcdNav(
     new LcdText(0, 0, "About"),
+    MENU_TYPES::NAV,
     4,
-    new LcdText[4]{
-      LcdText(0, 1, "HumanBenchmark"),
-      LcdText(0, 1, "BrihacAndrei"),
-      LcdText(0, 1, "git:todo"),
+    new LcdButton[4]{
+      LcdButton(0, 1, "HumanBenchmark"),
+      LcdButton(0, 1, "BrihacAndrei"),
+      LcdButton(0, 1, "git:todo"),
       bttnMainMenu
     }
   );
   menuMain = new LcdNav(
     new LcdText(0, 0, "Main Menu"),
+    MENU_TYPES::NAV,
     5,
-    new LcdText[5]{
-      LcdText(0, 1, "Start Game"),
-      LcdText(0, 1, "Score", menuScore),
-      LcdText(0, 1, "User Menu", menuUser),
-      LcdText(0, 1, "Settings", menuSettings),
-      LcdText(0, 1, "About", menuAbout)
+    new LcdButton[5]{
+      LcdButton(0, 1, "Start Game"),
+      LcdButton(0, 1, "Score", menuScore),
+      LcdButton(0, 1, "User Menu", menuUser),
+      LcdButton(0, 1, "Settings", menuSettings),
+      LcdButton(0, 1, "About", menuAbout)
       }
   );
   bttnMainMenu.setTargetMenu(menuMain);
   bttnMainMenu.center();
-  menuUser->setBackBttn(bttnMainMenu);
-  menuScore->setBackBttn(bttnMainMenu);
-  menuSettings->setBackBttn(bttnMainMenu);
-  menuAbout->setBackBttn(bttnMainMenu);
+  ((LcdNav*)menuUser)->setBackBttn(bttnMainMenu);
+  ((LcdNav*)menuScore)->setBackBttn(bttnMainMenu);
+  ((LcdNav*)menuSettings)->setBackBttn(bttnMainMenu);
+  ((LcdNav*)menuAbout)->setBackBttn(bttnMainMenu);
+
+  ((LcdInput*)menuContrast)->setPrevMenu(menuMain);
 }
 
 #endif
