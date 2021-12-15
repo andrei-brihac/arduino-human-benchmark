@@ -204,8 +204,8 @@ String LcdInput::handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t 
    *  modifies the joyMoved variable declared in the main .ino file - this is needed because the method is called inside loop()
    */
   uint16_t xDefault = 460;
-  uint16_t yDefault = 472;
-  uint16_t errorMargin = 10;
+  uint16_t yDefault = 460;
+  uint16_t errorMargin = 150;
   // x-axis input for changing current character position
   if (y >= yDefault - errorMargin && y <= yDefault + errorMargin) {
     if (!joyMoved && x < minThresh) {
@@ -257,4 +257,8 @@ LcdMenu* LcdInput::handleJoyPress(bool buttonState) {
 
 void LcdInput::setPrevMenu(LcdMenu* prevMenu) {
   this->prevMenu = prevMenu;
+}
+
+LcdInput::~LcdInput() {
+  delete this->input;
 }

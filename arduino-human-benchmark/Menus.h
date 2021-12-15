@@ -1,6 +1,7 @@
 #ifndef MENUS_H
 #define MENUS_H
 
+#include <EEPROM.h>
 #include "LcdUI.h"
 #include "GameVariables.h"
 
@@ -8,17 +9,52 @@ enum MENU_TYPES {
   NAV, IN, GAME
 };
 
-LcdMenu *menuMain, *menuSettings, *menuUser, *menuScore, *menuAbout;  // nav menus
-LcdMenu *menuContrast, *menuUserSet;  // input menus
+const int eeAddrMenu = 512;
+
+// main menu
+LcdMenu* menuMain;
+LcdButton bttnMainMenu(0, 1, "Main Menu");
+// nav menus
+const uint8_t nrOfNavMenus = 4;
+LcdMenu *menuSettings, *menuUser, *menuScore, *menuAbout;
+LcdMenu** navMenus[nrOfNavMenus] = {&menuSettings, &menuUser, &menuScore, &menuAbout};
+// input menus
+const uint8_t nrOfInputMenus = 2;
+LcdMenu *menuContrast, *menuUserSet;
+LcdMenu** inputMenus[nrOfInputMenus] = {&menuContrast, &menuUserSet};
 // check each menu class constructor to see how to declare a menu
 
-LcdButton bttnMainMenu(0, 1, "Main Menu");
 void initMenus() {
+//  // Deleting old menu pointers.
+//  int eeAddr = eeAddrMenu;
+//  void* oldMenu;
+//  for (uint8_t i = 0; i < 1 + nrOfNavMenus + nrOfInputMenus; i++) {
+//    EEPROM.get(eeAddr, oldMenu);
+//    eeAddr += 2;
+//    delete oldMenu;
+//  }
+//  // Clear EEPROM memory where the old menu pointers were stored.
+//  for (int i = 0; i < (1 + nrOfNavMenus + nrOfInputMenus) * 2; i++) {
+//    EEPROM.write(i, 0);
+//  }
+  // Any input menu is instantiated before the nav menu containing it, making the linking easier.
+  // ------------------------------------------
+  menuScore = new LcdNav(
+    new LcdText(0, 0, "Score"),
+    MENU_TYPES::NAV,
+    3,
+    new LcdButton[3]{
+      LcdButton(0, 1, "High Score"),
+      LcdButton(0, 1, "Reset"),
+      bttnMainMenu
+    }
+  );
+  // --------------------------------------------
   menuUserSet = new LcdInput(
     new LcdText(0, 0, "Set Username"),
     MENU_TYPES::IN,
-    new LcdInputBox(0, 1, userName),
-    menuMain,
+    new LcdInputBox(0, 1, userName.value),
+    menuUser,
     &setUserName
   );
   menuUser = new LcdNav(
@@ -31,21 +67,14 @@ void initMenus() {
       bttnMainMenu
     }
   );
-  menuScore = new LcdNav(
-    new LcdText(0, 0, "Score"),
-    MENU_TYPES::NAV,
-    3,
-    new LcdButton[3]{
-      LcdButton(0, 1, "High Score"),
-      LcdButton(0, 1, "Reset"),
-      bttnMainMenu
-    }
-  );
+  // Linking input menus back to the user menu.
+  ((LcdInput*)menuUserSet)->setPrevMenu(menuUser);
+  // --------------------------------------------
   menuContrast = new LcdInput(
     new LcdText(0, 0, "LCD Contrast"),
     MENU_TYPES::IN,
-    new LcdInputBox(0, 1, lcdContrast),
-    menuMain,
+    new LcdInputBox(0, 1, String(lcdContrast.value)),
+    menuSettings,
     &setLcdContrast
   );
   menuSettings = new LcdNav(
@@ -59,6 +88,9 @@ void initMenus() {
       bttnMainMenu
     }
   );
+  // Linking input menus back to the settings menu.
+  ((LcdInput*)menuContrast)->setPrevMenu(menuSettings);
+  // --------------------------------------------
   menuAbout = new LcdNav(
     new LcdText(0, 0, "About"),
     MENU_TYPES::NAV,
@@ -70,6 +102,8 @@ void initMenus() {
       bttnMainMenu
     }
   );
+  // --------------------------------------------
+  // Main menu is instantiated last because it needs to be linked to the previously instantiated menus.
   menuMain = new LcdNav(
     new LcdText(0, 0, "Main Menu"),
     MENU_TYPES::NAV,
@@ -84,13 +118,22 @@ void initMenus() {
   );
   bttnMainMenu.setTargetMenu(menuMain);
   bttnMainMenu.center();
-  ((LcdNav*)menuUser)->setBackBttn(bttnMainMenu);
-  ((LcdNav*)menuScore)->setBackBttn(bttnMainMenu);
-  ((LcdNav*)menuSettings)->setBackBttn(bttnMainMenu);
-  ((LcdNav*)menuAbout)->setBackBttn(bttnMainMenu);
-
-  ((LcdInput*)menuContrast)->setPrevMenu(menuMain);
-  ((LcdInput*)menuUserSet)->setPrevMenu(menuMain);
+  // Linking each back button to the main menu.
+  for (uint8_t i = 0; i < nrOfNavMenus; i++) {
+    ((LcdNav*)(*navMenus[i]))->setBackBttn(bttnMainMenu);
+  }
+//  // Save the menu pointers in EEPROM to do clean-up on next start-up.
+//  eeAddr = eeAddrMenu;
+//  EEPROM.put(eeAddr, (void*)menuMain);
+//  eeAddr += 2;
+//  for (uint8_t i = 0; i < nrOfNavMenus; i++) {
+//    EEPROM.put(eeAddr, (void*)*navMenus[i]);
+//    eeAddr += 2;
+//  }
+//  for (uint8_t i = 0; i < nrOfInputMenus; i++) {
+//    EEPROM.put(eeAddr, (void*)*inputMenus[i]);
+//    eeAddr += 2;
+//  }
 }
 
 #endif

@@ -99,6 +99,7 @@ class LcdInput : public LcdMenu {
     LcdMenu* handleJoyPress(bool buttonState);
     void blinkCursor(LiquidCrystal& lcd);
     void setPrevMenu(LcdMenu* prevMenu);
+    ~LcdInput();
 };
 
 #endif

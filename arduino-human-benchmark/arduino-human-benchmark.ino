@@ -13,23 +13,24 @@ uint16_t menuChangeDelay = 200;
 bool joyMoved = false;
 
 void setup() {
+  readVariables();
   pinMode(pinContrast, OUTPUT);
-  analogWrite(pinContrast, lcdContrast.toInt());
+  analogWrite(pinContrast, lcdContrast.value);
 
   pinMode(pinJoyVx, INPUT);
   pinMode(pinJoyVy, INPUT);
   pinMode(pinJoyBttn, INPUT_PULLUP);
 
+  Serial.begin(9600);
+
   lcd.createChar(arrowLeftNum, arrowLeft);
   lcd.createChar(arrowRightNum, arrowRight);
   lcd.begin(lcdColNum, lcdRowNum);
   LcdNav::initArrows(arrowLeftNum, arrowRightNum);
-  
+
   initMenus();
   currentMenu = menuMain;
   currentMenu->display(lcd);
-
-  Serial.begin(9600);
 }
 
 void loop() {
@@ -70,7 +71,7 @@ void handleLcdMenu() {
   // if a signal to draw the menu has been received from moving or pressing the joystick, then we draw it and signal that it has been drawn
   if (drawMenu) {
     currentMenu->display(lcd);
-    analogWrite(pinContrast, lcdContrast.toInt());
+    analogWrite(pinContrast, lcdContrast.value);
     drawMenu = false;
   }
 }
