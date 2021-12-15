@@ -3,11 +3,12 @@
 
 const uint8_t pinRS = 2;
 const uint8_t pinEnable = 3;
-const uint8_t pinD4 = 9;
+const uint8_t pinD4 = 4;
 const uint8_t pinD5 = 8;
-const uint8_t pinD6 = 13;
-const uint8_t pinD7 = 5;
-const uint8_t pinContrast = 6;
+const uint8_t pinD6 = 9;
+const uint8_t pinD7 = 10;
+const uint8_t pinContrast = 5;
+const uint8_t pinBrightness = 6;
 
 const uint8_t arrowLeftNum = 0;
 const uint8_t arrowRightNum = 1;

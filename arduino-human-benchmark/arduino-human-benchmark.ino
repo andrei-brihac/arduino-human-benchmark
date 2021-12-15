@@ -8,14 +8,16 @@ LiquidCrystal lcd(pinRS, pinEnable, pinD4, pinD5, pinD6, pinD7);
 LcdMenu* currentMenu;
 bool drawMenu = false;
 unsigned long long lastMenuChange;
-uint16_t menuChangeDelay = 200;
+uint16_t menuChangeDelay = 500;
 
 bool joyMoved = false;
 
 void setup() {
   readVariables();
   pinMode(pinContrast, OUTPUT);
+  pinMode(pinBrightness, OUTPUT);
   analogWrite(pinContrast, lcdContrast.value);
+  analogWrite(pinBrightness, lcdBrightness.value.toInt());
 
   pinMode(pinJoyVx, INPUT);
   pinMode(pinJoyVy, INPUT);
@@ -72,6 +74,7 @@ void handleLcdMenu() {
   if (drawMenu) {
     currentMenu->display(lcd);
     analogWrite(pinContrast, lcdContrast.value);
+    analogWrite(pinBrightness, lcdBrightness.value.toInt());
     drawMenu = false;
   }
 }

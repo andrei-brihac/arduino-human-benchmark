@@ -52,6 +52,8 @@ template<> void eeVar<String>::readVal() {
 }
 
 eeVar<int> lcdContrast(350, eeAddr);
+eeVar<String> lcdBrightness("255", eeAddr);
+eeVar<String> ledBrightness("10", eeAddr);
 eeVar<String> userName("        ", eeAddr);
 
 void clearEEPROM() {
@@ -61,8 +63,10 @@ void clearEEPROM() {
 }
 
 void readVariables() {
-  lcdContrast.readVal();
-  userName.readVal();
+//  lcdContrast.readVal();
+//  userName.readVal();
+//  lcdBrightness.readVal();
+//  ledBrightness.readVal();
 }
 
 void setLcdContrast(String newContrast) {
@@ -73,6 +77,16 @@ void setLcdContrast(String newContrast) {
 void setUserName(String newUserName) {
   userName.setVal(newUserName);
   userName.saveVal();
+}
+
+void setLcdBrightness(String newBrightness) {
+  lcdBrightness.setVal(newBrightness);
+  lcdBrightness.saveVal();
+}
+
+void setLedBrightness(String newBrightness) {
+  ledBrightness.setVal(newBrightness);
+  ledBrightness.saveVal();
 }
 
 #endif
