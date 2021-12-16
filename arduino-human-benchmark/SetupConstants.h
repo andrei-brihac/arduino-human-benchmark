@@ -35,8 +35,4 @@ const uint8_t pinJoyVx = A0;
 const uint8_t pinJoyVy = A1;
 const uint8_t pinJoyBttn = 7;
 
-const uint8_t pinDIN = 12;
-const uint8_t pinCS = 13;
-const uint8_t pinCLK = 11;
-
 #endif

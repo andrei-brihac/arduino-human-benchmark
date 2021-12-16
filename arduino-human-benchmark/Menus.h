@@ -22,6 +22,8 @@ LcdMenu** navMenus[nrOfNavMenus] = {&menuSettings, &menuUser, &menuScore, &menuA
 const uint8_t nrOfInputMenus = 4;
 LcdMenu *menuContrastLcd, *menuUserSet, *menuBrightnessLcd, *menuBrightnessLed;
 LcdMenu** inputMenus[nrOfInputMenus] = {&menuContrastLcd, &menuUserSet, &menuBrightnessLcd, &menuBrightnessLed};
+// combat menu
+LcdMenu* menuGame;
 // check each menu class constructor to see how to declare a menu
 
 void initMenus() {
@@ -34,6 +36,7 @@ void initMenus() {
 //    delete oldMenu;
 //  }
   // Any input menu is instantiated before the nav menu containing it, making the linking easier.
+  menuGame = new LcdGame(new LcdText(0, 0, "Game Menu"), MENU_TYPES::GAME);
   // ------------------------------------------
   menuScore = new LcdNav(
     new LcdText(0, 0, "Score"),
@@ -121,7 +124,7 @@ void initMenus() {
     MENU_TYPES::NAV,
     5,
     new LcdButton[5]{
-      LcdButton(0, 1, "Start Game"),
+      LcdButton(0, 1, "Start Game", menuGame),
       LcdButton(0, 1, "Score", menuScore),
       LcdButton(0, 1, "User Menu", menuUser),
       LcdButton(0, 1, "Settings", menuSettings),
@@ -146,6 +149,8 @@ void initMenus() {
 //    EEPROM.put(addr, (void*)*inputMenus[i]);
 //    addr += 2;
 //  }
+//  EEPROM.put(addr, (void*)menuGame);
+//  addr += 2;
 }
 
 #endif

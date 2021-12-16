@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
 #include <LedControl.h>
-#include "LcdUI.h"
 #include "SetupConstants.h"
 #include "Menus.h"
+#include "Game.h"
 
 LiquidCrystal lcd(pinRS, pinEnable, pinD4, pinD5, pinD6, pinD7);
 LcdMenu* currentMenu;
@@ -12,10 +12,13 @@ unsigned long long lastMenuChange;
 uint16_t menuChangeDelay = 500;
 
 LedControl ledControl = LedControl(pinDIN, pinCLK, pinCS, 1);
+bool inGame = false;
 
 bool joyMoved = false;
 
 void setup() {
+  Serial.begin(9600);
+  
   readVariables();
   pinMode(pinContrast, OUTPUT);
   pinMode(pinBrightness, OUTPUT);
@@ -26,8 +29,6 @@ void setup() {
   pinMode(pinJoyVy, INPUT);
   pinMode(pinJoyBttn, INPUT_PULLUP);
 
-  Serial.begin(9600);
-
   lcd.createChar(arrowLeftNum, arrowLeft);
   lcd.createChar(arrowRightNum, arrowRight);
   lcd.begin(lcdColNum, lcdRowNum);
@@ -37,19 +38,16 @@ void setup() {
   currentMenu = menuMain;
   currentMenu->display(lcd);
 
-  // test matrix
   ledControl.shutdown(0, false);
-  ledControl.setIntensity(0, 2);
-  ledControl.clearDisplay(0);
-  for (uint8_t i = 0; i < 8; i++) {
-   for (uint8_t j = 0; j < 8; j++) {
-      ledControl.setLed(0, j, i, true);
-    }
-  }
+  ledControl.setIntensity(0, ledBrightness.value.toInt());
+  initMatrixWalls();  // test code -- to be changed
+  matrix[xPos][yPos] = 1;  // test code -- to be changed
+  randomSeed(analogRead(0));
 }
 
 void loop() {
   handleLcdMenu();
+  if (inGame) {testGame(ledControl);}  // test code -- to be changed -- this has unexpected effects on EEPROM saving and some of the menu text - need to fix
 }
 
 void handleLcdMenu() {
@@ -81,13 +79,26 @@ void handleLcdMenu() {
     ((LcdInput*)currentMenu)->blinkCursor(lcd);  // blink the cursor at the chosen location
   }
   if (currentMenuType == MENU_TYPES::GAME) {
-    // do something
+    inGame = true;
+    drawMenu = ((LcdGame*)currentMenu)->setVariables(score, lives, level);  // this method returns true when any of the variables change value
+    if (lives == 0) {  // test code -- to be changed
+      currentMenu = menuMain;
+      drawMenu = true;
+      inGame = false;
+      ledControl.clearDisplay(0);
+      lives = 3;
+      score = 0;
+      level = 1;
+      xPos = 4;
+      yPos = 4;
+    }
   }
   // if a signal to draw the menu has been received from moving or pressing the joystick, then we draw it and signal that it has been drawn
   if (drawMenu) {
     currentMenu->display(lcd);
     analogWrite(pinContrast, lcdContrast.value);
     analogWrite(pinBrightness, lcdBrightness.value.toInt());
+    ledControl.setIntensity(0, ledBrightness.value.toInt());
     drawMenu = false;
   }
 }

@@ -268,3 +268,30 @@ void LcdInput::setPrevMenu(LcdMenu* prevMenu) {
 LcdInput::~LcdInput() {
   delete this->input;
 }
+
+// --------------------------------------------------------------
+// ---------------- LcdGame Function Definitions ----------------
+// --------------------------------------------------------------
+LcdGame::LcdGame(LcdText* title, uint8_t type) : LcdMenu(title, type) {
+  this->score = -1;
+  this->lives = -1;
+  this->level = -1;
+}
+
+bool LcdGame::setVariables(int score, uint8_t lives, uint8_t level) {
+  // returns true when any old value is replaced, false otherwise - is used in main to draw the menu on change
+  bool changed = score != this->score || lives != this->lives || level != this->level;
+  this->score = score;
+  this->lives = lives;
+  this->level = level;
+  return changed;
+}
+
+void LcdGame::display(LiquidCrystal& lcd) {
+  lcd.clear();
+  this->title->display(lcd);
+  char str[17];
+  snprintf(str, sizeof(str), "S:%d   L:%d Lv:%d", this->score, this->lives, this->level);
+  lcd.setCursor(1, 1);
+  lcd.print(str);
+}
