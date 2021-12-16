@@ -63,10 +63,10 @@ void clearEEPROM() {
 }
 
 void readVariables() {
-//  lcdContrast.readVal();
-//  userName.readVal();
-//  lcdBrightness.readVal();
-//  ledBrightness.readVal();
+  lcdContrast.readVal();
+  userName.readVal();
+  lcdBrightness.readVal();
+  ledBrightness.readVal();
 }
 
 void setLcdContrast(String newContrast) {

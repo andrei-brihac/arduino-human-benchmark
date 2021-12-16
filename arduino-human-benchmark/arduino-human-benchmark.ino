@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
+#include <LedControl.h>
 #include "LcdUI.h"
 #include "SetupConstants.h"
 #include "Menus.h"
@@ -9,6 +10,8 @@ LcdMenu* currentMenu;
 bool drawMenu = false;
 unsigned long long lastMenuChange;
 uint16_t menuChangeDelay = 500;
+
+LedControl ledControl = LedControl(pinDIN, pinCLK, pinCS, 1);
 
 bool joyMoved = false;
 
@@ -33,6 +36,16 @@ void setup() {
   initMenus();
   currentMenu = menuMain;
   currentMenu->display(lcd);
+
+  // test matrix
+  ledControl.shutdown(0, false);
+  ledControl.setIntensity(0, 2);
+  ledControl.clearDisplay(0);
+  for (uint8_t i = 0; i < 8; i++) {
+   for (uint8_t j = 0; j < 8; j++) {
+      ledControl.setLed(0, j, i, true);
+    }
+  }
 }
 
 void loop() {
