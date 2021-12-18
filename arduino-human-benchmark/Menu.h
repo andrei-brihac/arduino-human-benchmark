@@ -3,13 +3,11 @@
 
 #include <EEPROM.h>
 #include "LcdUI.h"
-#include "GameVariables.h"
+#include "ControlVariables.h"
 
 enum MENU_TYPES {
   NAV, IN, GAME
 };
-
-const int addrMenu = 512;
 
 // main menu
 LcdMenu* menuMain;
@@ -27,14 +25,6 @@ LcdMenu* menuGame;
 // check each menu class constructor to see how to declare a menu
 
 void initMenus() {
-//  // Deleting old menu pointers.
-//  int addr = addrMenu;
-//  void* oldMenu;
-//  for (uint8_t i = 0; i < 1 + nrOfNavMenus + nrOfInputMenus; i++) {
-//    EEPROM.get(addr, oldMenu);
-//    addr += 2;
-//    delete oldMenu;
-//  }
   // Any input menu is instantiated before the nav menu containing it, making the linking easier.
   menuGame = new LcdGame(new LcdText(0, 0, "Game Menu"), MENU_TYPES::GAME);
   // ------------------------------------------
@@ -137,20 +127,6 @@ void initMenus() {
   for (uint8_t i = 0; i < nrOfNavMenus; i++) {
     ((LcdNav*)(*navMenus[i]))->setBackBttn(bttnMainMenu);
   }
-//  // Save the menu pointers in EEPROM to do clean-up on next start-up.
-//  addr = addrMenu;
-//  EEPROM.put(addr, (void*)menuMain);
-//  addr += 2;
-//  for (uint8_t i = 0; i < nrOfNavMenus; i++) {
-//    EEPROM.put(addr, (void*)*navMenus[i]);
-//    addr += 2;
-//  }
-//  for (uint8_t i = 0; i < nrOfInputMenus; i++) {
-//    EEPROM.put(addr, (void*)*inputMenus[i]);
-//    addr += 2;
-//  }
-//  EEPROM.put(addr, (void*)menuGame);
-//  addr += 2;
 }
 
 #endif

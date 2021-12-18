@@ -53,7 +53,7 @@ template<> void eeVar<String>::readVal() {
 
 eeVar<int> lcdContrast(350, eeAddr);
 eeVar<String> lcdBrightness("255", eeAddr);
-eeVar<String> ledBrightness("10", eeAddr);
+eeVar<String> ledBrightness("05", eeAddr);
 eeVar<String> userName("        ", eeAddr);
 
 void clearEEPROM() {
@@ -62,7 +62,7 @@ void clearEEPROM() {
   }
 }
 
-void readVariables() {
+void readControlVariables() {
   lcdContrast.readVal();
   userName.readVal();
   lcdBrightness.readVal();

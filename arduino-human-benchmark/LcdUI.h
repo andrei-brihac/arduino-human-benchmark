@@ -108,7 +108,6 @@ class LcdGame : public LcdMenu {
     int score;
     uint8_t lives;
     uint8_t level;
-    LcdText* infoText;
   public:
     LcdGame(LcdText* title=nullptr, uint8_t type=2);
     void display(LiquidCrystal& lcd);

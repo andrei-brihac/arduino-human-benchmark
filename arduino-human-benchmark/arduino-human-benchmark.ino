@@ -2,7 +2,7 @@
 #include <LiquidCrystal.h>
 #include <LedControl.h>
 #include "SetupConstants.h"
-#include "Menus.h"
+#include "Menu.h"
 #include "Game.h"
 
 LiquidCrystal lcd(pinRS, pinEnable, pinD4, pinD5, pinD6, pinD7);
@@ -12,6 +12,7 @@ unsigned long long lastMenuChange;
 uint16_t menuChangeDelay = 500;
 
 LedControl ledControl = LedControl(pinDIN, pinCLK, pinCS, 1);
+Game game;
 bool inGame = false;
 
 bool joyMoved = false;
@@ -19,7 +20,7 @@ bool joyMoved = false;
 void setup() {
   Serial.begin(9600);
   
-  readVariables();
+  readControlVariables();
   pinMode(pinContrast, OUTPUT);
   pinMode(pinBrightness, OUTPUT);
   analogWrite(pinContrast, lcdContrast.value);
@@ -40,14 +41,11 @@ void setup() {
 
   ledControl.shutdown(0, false);
   ledControl.setIntensity(0, ledBrightness.value.toInt());
-  initMatrixWalls();  // test code -- to be changed
-  matrix[xPos][yPos] = 1;  // test code -- to be changed
   randomSeed(analogRead(0));
 }
 
 void loop() {
   handleLcdMenu();
-  if (inGame) {testGame(ledControl);}  // test code -- to be changed -- this has unexpected effects on EEPROM saving and some of the menu text - need to fix
 }
 
 void handleLcdMenu() {
@@ -80,18 +78,7 @@ void handleLcdMenu() {
   }
   if (currentMenuType == MENU_TYPES::GAME) {
     inGame = true;
-    drawMenu = ((LcdGame*)currentMenu)->setVariables(score, lives, level);  // this method returns true when any of the variables change value
-    if (lives == 0) {  // test code -- to be changed
-      currentMenu = menuMain;
-      drawMenu = true;
-      inGame = false;
-      ledControl.clearDisplay(0);
-      lives = 3;
-      score = 0;
-      level = 1;
-      xPos = 4;
-      yPos = 4;
-    }
+    drawMenu = ((LcdGame*)currentMenu)->setVariables(game.getScore(), game.getLives(), game.getLevel());  // this method returns true when any of the variables change value
   }
   // if a signal to draw the menu has been received from moving or pressing the joystick, then we draw it and signal that it has been drawn
   if (drawMenu) {
