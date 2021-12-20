@@ -3,18 +3,16 @@
 // --------------------------------------------------------------
 // ---------------- LcdText Function Definitions ----------------
 // --------------------------------------------------------------
-LcdText::LcdText(uint8_t col, uint8_t row, String text) {
-  this->col = col;
-  this->row = row;
+LcdText::LcdText(String text) {
   this->text = text;
 }
 
-void LcdText::center() {
-    this->col = (lcdColNum - this->text.length()) / 2;
+uint8_t LcdText::getCol() {
+    return (lcdColNum - this->text.length()) / 2;
 }
 
-void LcdText::display(LiquidCrystal& lcd) {
-    lcd.setCursor(this->col, this->row);
+void LcdText::display(LiquidCrystal& lcd, uint8_t col, uint8_t row) {
+    lcd.setCursor(col, row);
     lcd.print(this->text);
 }
 
@@ -29,7 +27,7 @@ void LcdText::setText(String text) {
 // --------------------------------------------------------------
 // ---------------- LcdButton Function Definitions --------------
 // --------------------------------------------------------------
-LcdButton::LcdButton(uint8_t col, uint8_t row, String text, LcdMenu* targetMenu) : LcdText(col, row, text) {
+LcdButton::LcdButton(String text, LcdMenu* targetMenu) : LcdText(text) {
   this->targetMenu = targetMenu;
 }
 
@@ -46,8 +44,7 @@ void LcdButton::setTargetMenu(LcdMenu* targetMenu) {
 // --------------------------------------------------------------
 String LcdInputBox::alphabet = "abcdefghijklmnopqrstuvwxyz0123456789 ";
 
-LcdInputBox::LcdInputBox(uint8_t col, uint8_t row, String text) : LcdText(col, row, text) {
-  this->center();
+LcdInputBox::LcdInputBox(String text) : LcdText(text) {
   this->currChar = 0;
 }
 
@@ -81,7 +78,6 @@ char LcdInputBox::findPrecedingCharInAlphabet(char c) {
 // --------------------------------------------------------------
 LcdMenu::LcdMenu(LcdText* title, uint8_t type) {
   this->title = title;
-  this->title->center();
   this->type = type;
 }
 
@@ -96,42 +92,34 @@ LcdMenu::~LcdMenu() {
 // --------------------------------------------------------------
 // ----------------- LcdNav Function Definitions ----------------
 // --------------------------------------------------------------
-byte LcdNav::arrowLeftNum;
-byte LcdNav::arrowRightNum;
+byte LcdNav::arrow;
 
-LcdNav::LcdNav(LcdText* title, uint8_t type, uint8_t nrOfOptions, LcdButton* options, bool centered) : LcdMenu(title, type) {
+LcdNav::LcdNav(LcdText* title, uint8_t type, uint8_t nrOfOptions, LcdButton** options) : LcdMenu(title, type) {
   this->nrOfOptions = nrOfOptions;
   this->options = options;
   this->currentOption = 0;
-  if (centered) {
-      for (uint8_t i = 0; i < nrOfOptions; i++) {
-          options[i].center();
-      }
-  }
 }
 
-void LcdNav::initArrows(byte arrowLeftNum, byte arrowRightNum) {
-  LcdNav::arrowLeftNum = arrowLeftNum;
-  LcdNav::arrowRightNum = arrowRightNum;
-}
-
-LcdButton LcdNav::getCurrentOption() {
+LcdButton* LcdNav::getCurrentOption() {
   return this->options[this->currentOption];
 }
 
-void LcdNav::setBackBttn(LcdButton& backBttn) {
+void LcdNav::initArrow(byte arrow) {
+  LcdNav::arrow = arrow;
+}
+
+void LcdNav::setBackBttn(LcdButton* backBttn) {
   this->options[nrOfOptions - 1] = backBttn;
 }
 
 void LcdNav::display(LiquidCrystal& lcd) {
   lcd.clear();
-  this->title->display(lcd);
-  this->options[currentOption].display(lcd);
-  // display left and right arrows on LCD for navigation
-  lcd.setCursor(this->options[currentOption].col - 1, this->options[currentOption].row);
-  lcd.write(byte(this->arrowLeftNum));
-  lcd.setCursor(this->options[currentOption].col + this->options[currentOption].text.length(), this->options[currentOption].row);
-  lcd.write(byte(this->arrowRightNum));
+  this->title->display(lcd, this->title->getCol(), 0);
+  this->options[currentOption]->display(lcd, this->options[currentOption]->getCol(), 1);
+  uint8_t optionCol = this->options[currentOption]->getCol();
+  uint8_t optionLen = this->options[currentOption]->getText().length();
+  lcd.setCursor(optionCol - 1, 1);
+  lcd.write(byte(this->arrow));
 }
 
 String LcdNav::handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t minThresh, uint16_t maxThresh) {
@@ -161,7 +149,7 @@ String LcdNav::handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t mi
 
 LcdMenu* LcdNav::handleJoyPress(bool buttonState) {
   if (buttonState == LOW) {
-    return this->options[this->currentOption].getTargetMenu();
+    return this->options[this->currentOption]->getTargetMenu();
   }
   return nullptr;
 }
@@ -185,15 +173,17 @@ LcdInput::LcdInput(LcdText* title, uint8_t type, LcdInputBox* input, LcdMenu* pr
 
 void LcdInput::display(LiquidCrystal& lcd) {
   lcd.clear();
-  this->title->display(lcd);
-  this->input->display(lcd);
+  this->title->display(lcd, this->title->getCol(), 0);
+  this->input->display(lcd, this->input->getCol(), 1);
 }
 
 void LcdInput::blinkCursor(LiquidCrystal& lcd) {
   /*
    *   blinks the cursor at position currChar in the input string utilizing the timing static variables
    */
-  lcd.setCursor(this->input->col + this->input->currChar, this->input->row);
+  uint8_t inputgetCol = this->input->getCol();
+  uint8_t inputLength = this->input->getText().length();
+  lcd.setCursor(inputgetCol + this->input->currChar, 1);
   if (millis() - lastBlinked > blinkDelay) {
     if (!blinked) {lcd.blink(); lastBlinked = millis(); blinked=true;}
     else {lcd.noBlink(); blinked=false;}
@@ -289,7 +279,7 @@ bool LcdGame::setVariables(int score, uint8_t lives, uint8_t level) {
 
 void LcdGame::display(LiquidCrystal& lcd) {
   lcd.clear();
-  this->title->display(lcd);
+  this->title->display(lcd, this->title->getCol(), 0);
   char str[17];
   snprintf(str, sizeof(str), "S:%d   L:%d Lv:%d", this->score, this->lives, this->level);
   lcd.setCursor(1, 1);

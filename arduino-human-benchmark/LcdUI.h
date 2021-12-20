@@ -15,25 +15,21 @@ class LcdInput;
 
 class LcdText {
   private:
-    uint8_t col;
-    uint8_t row;
     String text;
   public:
-    LcdText(uint8_t col, uint8_t row, String text);
-    void center();
-    void display(LiquidCrystal& lcd);
+    LcdText(String text);
+    uint8_t getCol();
+    void display(LiquidCrystal& lcd, uint8_t col, uint8_t row);
     String getText();
     void setText(String text);
-  friend class LcdNav;
   friend class LcdInputBox;
-  friend class LcdInput;
 };
 
 class LcdButton : public LcdText {
   private:
     LcdMenu* targetMenu;
   public:
-    LcdButton(uint8_t col, uint8_t row, String text, LcdMenu* targetMenu=nullptr);
+    LcdButton(String text, LcdMenu* targetMenu=nullptr);
     LcdMenu* getTargetMenu();
     void setTargetMenu(LcdMenu* targetMenu);
 };
@@ -43,7 +39,7 @@ class LcdInputBox : public LcdText {
   private:
     short currChar;
   public:
-    LcdInputBox(uint8_t col, uint8_t row, String text);
+    LcdInputBox(String text);
     char getCurrCharLetter();
     void setCurrCharLetter(char newChar);
     static char findNextCharInAlphabet(char c);
@@ -68,17 +64,16 @@ class LcdMenu {
 };
 
 class LcdNav : public LcdMenu {
-  static byte arrowLeftNum;
-  static byte arrowRightNum;
   private:
     uint8_t nrOfOptions;
-    LcdButton* options;
+    LcdButton** options;
     short currentOption;
+    static byte arrow;
   public:
-    LcdNav(LcdText* title=nullptr, uint8_t type=0, uint8_t nrOfOptions=0, LcdButton* options=nullptr, bool centered=true);
-    static void initArrows(byte arrowLeftNum, byte arrowRightNum);
-    void setBackBttn(LcdButton& backBttn);
-    LcdButton getCurrentOption();
+    LcdNav(LcdText* title=nullptr, uint8_t type=0, uint8_t nrOfOptions=0, LcdButton** options=nullptr);
+    void setBackBttn(LcdButton* backBttn);
+    static void initArrow(byte arrow);
+    LcdButton* getCurrentOption();
     void display(LiquidCrystal& lcd);
     String handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t minThresh=350, uint16_t maxThresh=750);
     LcdMenu* handleJoyPress(bool buttonState);

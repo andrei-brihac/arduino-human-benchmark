@@ -11,7 +11,7 @@ enum MENU_TYPES {
 
 // main menu
 LcdMenu* menuMain;
-LcdButton bttnMainMenu(0, 1, "Main Menu");
+LcdButton* bttnMainMenu = new LcdButton("Main Menu");
 // nav menus
 const uint8_t nrOfNavMenus = 4;
 LcdMenu *menuSettings, *menuUser, *menuScore, *menuAbout;
@@ -26,33 +26,33 @@ LcdMenu* menuGame;
 
 void initMenus() {
   // Any input menu is instantiated before the nav menu containing it, making the linking easier.
-  menuGame = new LcdGame(new LcdText(0, 0, "Game Menu"), MENU_TYPES::GAME);
+  menuGame = new LcdGame(new LcdText("Game Menu"), MENU_TYPES::GAME);
   // ------------------------------------------
   menuScore = new LcdNav(
-    new LcdText(0, 0, "Score"),
+    new LcdText("Score"),
     MENU_TYPES::NAV,
     3,
-    new LcdButton[3]{
-      LcdButton(0, 1, "High Score"),
-      LcdButton(0, 1, "Reset"),
+    new LcdButton*[3]{
+      new LcdButton("High Score"),
+      new LcdButton("Reset"),
       bttnMainMenu
     }
   );
   // --------------------------------------------
   menuUserSet = new LcdInput(
-    new LcdText(0, 0, "Set Username"),
+    new LcdText("Set Username"),
     MENU_TYPES::IN,
-    new LcdInputBox(0, 1, userName.value),
+    new LcdInputBox(userName.value),
     menuUser,
     &setUserName
   );
   menuUser = new LcdNav(
-    new LcdText(0, 0, "User Settings"),
+    new LcdText("User Settings"),
     MENU_TYPES::NAV,
     3,
-    new LcdButton[3]{
-      LcdButton(0, 1, "Set Username", menuUserSet),
-      LcdButton(0, 1, "Delete User"),
+    new LcdButton*[3]{
+      new LcdButton("Set Username", menuUserSet),
+      new LcdButton("Delete User"),
       bttnMainMenu
     }
   );
@@ -60,34 +60,34 @@ void initMenus() {
   ((LcdInput*)menuUserSet)->setPrevMenu(menuUser);
   // --------------------------------------------
   menuContrastLcd = new LcdInput(
-    new LcdText(0, 0, "LCD Contrast"),
+    new LcdText("LCD Contrast"),
     MENU_TYPES::IN,
-    new LcdInputBox(0, 1, String(lcdContrast.value)),
+    new LcdInputBox(String(lcdContrast.value)),
     menuSettings,
     &setLcdContrast
   );
   menuBrightnessLcd = new LcdInput(
-    new LcdText(0, 0, "LCD Brightness"),
+    new LcdText("LCD Brightness"),
     MENU_TYPES::IN,
-    new LcdInputBox(0, 1, lcdBrightness.value),
+    new LcdInputBox(lcdBrightness.value),
     menuSettings,
     &setLcdBrightness
   );
   menuBrightnessLed = new LcdInput(
-    new LcdText(0, 0, "LED Brightness"),
+    new LcdText("LED Brightness"),
     MENU_TYPES::IN,
-    new LcdInputBox(0, 1, ledBrightness.value),
+    new LcdInputBox(ledBrightness.value),
     menuSettings,
     &setLedBrightness
   );
   menuSettings = new LcdNav(
-    new LcdText(0, 0, "Settings"),
+    new LcdText("Settings"),
     MENU_TYPES::NAV,
     4,
-    new LcdButton[4]{
-      LcdButton(0, 1, "LCD Contrast", menuContrastLcd),
-      LcdButton(0, 1, "LCD Brightness", menuBrightnessLcd),
-      LcdButton(0, 1, "LED Brightness", menuBrightnessLed),
+    new LcdButton*[4]{
+      new LcdButton("LCD Contrast", menuContrastLcd),
+      new LcdButton("LCD Brightness", menuBrightnessLcd),
+      new LcdButton("LED Brightness", menuBrightnessLed),
       bttnMainMenu
     }
   );
@@ -97,32 +97,31 @@ void initMenus() {
   ((LcdInput*)menuBrightnessLed)->setPrevMenu(menuSettings);
   // --------------------------------------------
   menuAbout = new LcdNav(
-    new LcdText(0, 0, "About"),
+    new LcdText("About"),
     MENU_TYPES::NAV,
     4,
-    new LcdButton[4]{
-      LcdButton(0, 1, "HumanBenchmark"),
-      LcdButton(0, 1, "BrihacAndrei"),
-      LcdButton(0, 1, "git:todo"),
+    new LcdButton*[4]{
+      new LcdButton("HumanBenchmark"),
+      new LcdButton("BrihacAndrei"),
+      new LcdButton("git:todo"),
       bttnMainMenu
     }
   );
   // --------------------------------------------
   // Main menu is instantiated last because it needs to be linked to the previously instantiated menus.
   menuMain = new LcdNav(
-    new LcdText(0, 0, "Main Menu"),
+    new LcdText("Main Menu"),
     MENU_TYPES::NAV,
     5,
-    new LcdButton[5]{
-      LcdButton(0, 1, "Start Game", menuGame),
-      LcdButton(0, 1, "Score", menuScore),
-      LcdButton(0, 1, "User Menu", menuUser),
-      LcdButton(0, 1, "Settings", menuSettings),
-      LcdButton(0, 1, "About", menuAbout)
+    new LcdButton*[5]{
+      new LcdButton("Start Game", menuGame),
+      new LcdButton("Score", menuScore),
+      new LcdButton("User Menu", menuUser),
+      new LcdButton("Settings", menuSettings),
+      new LcdButton("About", menuAbout)
       }
   );
-  bttnMainMenu.setTargetMenu(menuMain);
-  bttnMainMenu.center();
+  bttnMainMenu->setTargetMenu(menuMain);
   // Linking each back button to the main menu.
   for (uint8_t i = 0; i < nrOfNavMenus; i++) {
     ((LcdNav*)(*navMenus[i]))->setBackBttn(bttnMainMenu);

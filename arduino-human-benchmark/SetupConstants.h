@@ -10,18 +10,8 @@ const uint8_t pinD7 = 10;
 const uint8_t pinContrast = 5;
 const uint8_t pinBrightness = 6;
 
-const uint8_t arrowLeftNum = 0;
-const uint8_t arrowRightNum = 1;
-byte arrowLeft[8] = {
-  B00001,
-  B00010,
-  B00100,
-  B01000,
-  B00100,
-  B00010,
-  B00001
-};
-byte arrowRight[8] = {
+const uint8_t arrowNum = 0;
+byte arrow[8] = {
   B10000,
   B01000,
   B00100,

@@ -11,11 +11,11 @@ bool drawMenu = false;
 unsigned long long lastMenuChange;
 uint16_t menuChangeDelay = 500;
 
+bool joyMoved = false;
+
 LedControl ledControl = LedControl(pinDIN, pinCLK, pinCS, 1);
 Game game;
 bool inGame = false;
-
-bool joyMoved = false;
 
 void setup() {
   Serial.begin(9600);
@@ -30,10 +30,9 @@ void setup() {
   pinMode(pinJoyVy, INPUT);
   pinMode(pinJoyBttn, INPUT_PULLUP);
 
-  lcd.createChar(arrowLeftNum, arrowLeft);
-  lcd.createChar(arrowRightNum, arrowRight);
+  lcd.createChar(arrowNum, arrow);
   lcd.begin(lcdColNum, lcdRowNum);
-  LcdNav::initArrows(arrowLeftNum, arrowRightNum);
+  LcdNav::initArrow(arrowNum);
 
   initMenus();
   currentMenu = menuMain;
@@ -46,6 +45,7 @@ void setup() {
 
 void loop() {
   handleLcdMenu();
+  handleGame();
 }
 
 void handleLcdMenu() {
@@ -88,4 +88,9 @@ void handleLcdMenu() {
     ledControl.setIntensity(0, ledBrightness.value.toInt());
     drawMenu = false;
   }
+}
+
+void handleGame() {
+  if (!inGame) {return;}
+  game.displayGame(ledControl);
 }
