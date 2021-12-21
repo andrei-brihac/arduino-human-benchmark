@@ -17,7 +17,7 @@ class LcdText {
   private:
     String text;
   public:
-    LcdText(String text);
+    LcdText(String text="");
     uint8_t getCol();
     void display(LiquidCrystal& lcd, uint8_t col, uint8_t row);
     String getText();
@@ -49,15 +49,14 @@ class LcdInputBox : public LcdText {
 
 class LcdMenu {
   private:
-    LcdText* title;
+    LcdText title;
     uint8_t type;
   public:
-    LcdMenu(LcdText* title=nullptr, uint8_t type=0);
+    LcdMenu(LcdText title, uint8_t type=0);
     uint8_t getType();
     virtual void display(LiquidCrystal& lcd) = 0;
     virtual String handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t minThresh=350, uint16_t maxThresh=750) = 0;
     virtual LcdMenu* handleJoyPress(bool buttonState) = 0;
-    virtual ~LcdMenu();
   friend class LcdNav;
   friend class LcdInput;
   friend class LcdGame;
@@ -66,14 +65,14 @@ class LcdMenu {
 class LcdNav : public LcdMenu {
   private:
     uint8_t nrOfOptions;
-    LcdButton** options;
+    LcdButton* options;
     short currentOption;
     static byte arrow;
   public:
-    LcdNav(LcdText* title=nullptr, uint8_t type=0, uint8_t nrOfOptions=0, LcdButton** options=nullptr);
-    void setBackBttn(LcdButton* backBttn);
+    LcdNav(LcdText title, uint8_t type=0, uint8_t nrOfOptions=0, LcdButton* options=nullptr);
+    void setBackBttn(LcdButton backBttn);
     static void initArrow(byte arrow);
-    LcdButton* getCurrentOption();
+    LcdButton getCurrentOption();
     void display(LiquidCrystal& lcd);
     String handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t minThresh=350, uint16_t maxThresh=750);
     LcdMenu* handleJoyPress(bool buttonState);
@@ -89,7 +88,7 @@ class LcdInput : public LcdMenu {
     LcdMenu* prevMenu;
     void (*func)(String);
   public:
-    LcdInput(LcdText* title=nullptr, uint8_t type=1, LcdInputBox* input=nullptr, LcdMenu* prevMenu=nullptr, void (*func)(String)=nullptr);
+    LcdInput(LcdText title, uint8_t type=1, LcdInputBox* input=nullptr, LcdMenu* prevMenu=nullptr, void (*func)(String)=nullptr);
     void display(LiquidCrystal& lcd);
     String handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t minThresh=350, uint16_t maxThresh=750);
     LcdMenu* handleJoyPress(bool buttonState);
@@ -104,7 +103,7 @@ class LcdGame : public LcdMenu {
     uint8_t lives;
     uint8_t level;
   public:
-    LcdGame(LcdText* title=nullptr, uint8_t type=2);
+    LcdGame(LcdText title, uint8_t type=2);
     void display(LiquidCrystal& lcd);
     String handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t minThresh=350, uint16_t maxThresh=750) {return "idle";}
     LcdMenu* handleJoyPress(bool buttonState) {return nullptr;}

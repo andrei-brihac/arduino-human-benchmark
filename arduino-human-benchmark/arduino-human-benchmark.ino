@@ -9,13 +9,26 @@ LiquidCrystal lcd(pinRS, pinEnable, pinD4, pinD5, pinD6, pinD7);
 LcdMenu* currentMenu;
 bool drawMenu = false;
 unsigned long long lastMenuChange;
-uint16_t menuChangeDelay = 500;
+uint16_t menuChangeDelay = 750;
 
 bool joyMoved = false;
 
 LedControl ledControl = LedControl(pinDIN, pinCLK, pinCS, 1);
 Game game;
 bool inGame = false;
+uint8_t gameState = GAME_STATES::RANDOMIZE;
+uint8_t targetSqrArr[30];
+short targetSqrIdx = 0;
+bool targetBlinked = false;
+unsigned long long targetLastBlinked = 0;
+const uint16_t animationDuration = 500;
+
+// TODO:
+// - difficulty by reducing showBlinkInterval
+// - score by measuring completion time
+// - saving EEPROM score, highscore
+// - adding buzzer tone for each square
+// - intro screen, game end screen
 
 void setup() {
   Serial.begin(9600);
@@ -68,17 +81,23 @@ void handleLcdMenu() {
         lastMenuChange = millis();
     }
   }
-  // didn't manage to use typeid correctly, so I'm just saving the menu type inside each object - 1 byte of memory is lost :(
-  uint8_t currentMenuType = currentMenu->getType();
-  if (currentMenuType == MENU_TYPES::NAV) {
-    lcd.noBlink();  // make sure the cursor isn't blinking after exiting an input menu
-  }
-  if (currentMenuType == MENU_TYPES::IN) {
-    ((LcdInput*)currentMenu)->blinkCursor(lcd);  // blink the cursor at the chosen location
-  }
-  if (currentMenuType == MENU_TYPES::GAME) {
-    inGame = true;
-    drawMenu = ((LcdGame*)currentMenu)->setVariables(game.getScore(), game.getLives(), game.getLevel());  // this method returns true when any of the variables change value
+  switch (currentMenu->getType()) {
+    case MENU_TYPES::NAV:
+    {
+      lcd.noBlink();  // make sure the cursor isn't blinking after exiting an input menu
+      break;
+    }
+    case MENU_TYPES::IN:
+    {
+      ((LcdInput*)currentMenu)->blinkCursor(lcd);  // blink the cursor at the chosen location
+      break;
+    }
+    case MENU_TYPES::GAME:
+    {
+      inGame = true;
+      drawMenu = ((LcdGame*)currentMenu)->setVariables(game.getScore(), game.getLives(), game.getLevel());  // this method returns true when any of the variables change value
+      break;
+    }
   }
   // if a signal to draw the menu has been received from moving or pressing the joystick, then we draw it and signal that it has been drawn
   if (drawMenu) {
@@ -92,5 +111,76 @@ void handleLcdMenu() {
 
 void handleGame() {
   if (!inGame) {return;}
+  switch (gameState) {
+    case GAME_STATES::SELECTION:
+    {
+      // get joystick reads
+      uint16_t vxRead = analogRead(pinJoyVx);
+      uint16_t vyRead = analogRead(pinJoyVy);
+      bool buttonState = digitalRead(pinJoyBttn);
+      // modifies the currSqrRow and currSqrCol variables in the Game class
+      game.handleJoyMove(vxRead, vyRead, joyMoved);
+
+      // checks if current square is the target square for each targetSqr in targetSqrArr
+      // if chosen square is wrong moves to SHOW (to show the correct configuration) and decrements Game.lives 
+      // if all choices are correct advances the level and moves to RANDOMIZE
+      bool animateChoice = game.handleJoyPress(buttonState, gameState, targetSqrArr, targetSqrIdx);  // returns true if correct choice, false otherwise
+      if (animateChoice) {  // animate a correct choice
+        short sqrRow = targetSqrArr[targetSqrIdx - 1] / 3;
+        short sqrCol = targetSqrArr[targetSqrIdx - 1] % 3;
+        // turn off all squares and turn on the correct choice
+        game.wipeSquares();
+        Game::squares[sqrRow][sqrCol].setState(Game::matrix, true);
+        game.displayGame(ledControl);
+        delay(animationDuration);  // also gets rid of having to check for repeat presses of the button which is pretty cool - thanks delay!
+        game.lightSquares();
+      }
+      
+      game.blinkCurrSquare(selectionBlinkInterval);
+      break;
+    }
+    case GAME_STATES::SHOW:
+    {
+      if (targetSqrIdx < game.getLevel()) {
+        short sqrRow = targetSqrArr[targetSqrIdx] / 3;
+        short sqrCol = targetSqrArr[targetSqrIdx] % 3;
+        if (!targetBlinked) {  // we only blink each target square once, so this method is needed
+          targetBlinked = true;
+          targetLastBlinked = millis();
+          Game::squares[sqrRow][sqrCol].setState(Game::matrix, true);  // turn the target square on, while all others are off
+        } else if (millis() - targetLastBlinked > showBlinkInterval) {
+          targetBlinked = false;
+          Game::squares[sqrRow][sqrCol].setState(Game::matrix, false);  // turn the target square off
+          targetSqrIdx++;  // move on to the next target square
+        }
+      }
+      else {
+        game.lightSquares();  // turn all the squares back on to prepare for the selection state
+        targetSqrIdx = 0;
+        gameState = GAME_STATES::SELECTION;
+        game.setCurrSquare(1, 1); // set current square in the middle
+      }
+      break;
+   }
+   case GAME_STATES::RANDOMIZE:
+   {
+    targetSqrArr[game.getLevel() - 1] = random(SQUARE_NUMBER);  // add a random square index (0-8) to targetSqrArr (each time level advances one new square is added)
+    gameState = GAME_STATES::SHOW;
+    game.wipeSquares();  // turn off all squares and only turn on the target square, making it easier to see
+    break;
+   }
+  }
+  
+  if (game.getLives() == 0) {
+    // the user ran out of lives, reset the game for next player and wipe the display
+    inGame = false;
+    game.wipeSquares();
+    game.reset();
+    // send the user to a score screen
+    currentMenu = menuMain;
+    drawMenu = true;
+    lastMenuChange = millis();
+  }
+  
   game.displayGame(ledControl);
 }

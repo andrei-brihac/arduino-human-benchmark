@@ -76,7 +76,7 @@ char LcdInputBox::findPrecedingCharInAlphabet(char c) {
 // --------------------------------------------------------------
 // ---------------- LcdMenu Function Definitions ----------------
 // --------------------------------------------------------------
-LcdMenu::LcdMenu(LcdText* title, uint8_t type) {
+LcdMenu::LcdMenu(LcdText title, uint8_t type) {
   this->title = title;
   this->type = type;
 }
@@ -85,22 +85,18 @@ uint8_t LcdMenu::getType() {
   return this->type;
 }
 
-LcdMenu::~LcdMenu() {
-  delete this->title;
-}
-
 // --------------------------------------------------------------
 // ----------------- LcdNav Function Definitions ----------------
 // --------------------------------------------------------------
 byte LcdNav::arrow;
 
-LcdNav::LcdNav(LcdText* title, uint8_t type, uint8_t nrOfOptions, LcdButton** options) : LcdMenu(title, type) {
+LcdNav::LcdNav(LcdText title, uint8_t type, uint8_t nrOfOptions, LcdButton* options) : LcdMenu(title, type) {
   this->nrOfOptions = nrOfOptions;
   this->options = options;
   this->currentOption = 0;
 }
 
-LcdButton* LcdNav::getCurrentOption() {
+LcdButton LcdNav::getCurrentOption() {
   return this->options[this->currentOption];
 }
 
@@ -108,16 +104,16 @@ void LcdNav::initArrow(byte arrow) {
   LcdNav::arrow = arrow;
 }
 
-void LcdNav::setBackBttn(LcdButton* backBttn) {
+void LcdNav::setBackBttn(LcdButton backBttn) {
   this->options[nrOfOptions - 1] = backBttn;
 }
 
 void LcdNav::display(LiquidCrystal& lcd) {
   lcd.clear();
-  this->title->display(lcd, this->title->getCol(), 0);
-  this->options[currentOption]->display(lcd, this->options[currentOption]->getCol(), 1);
-  uint8_t optionCol = this->options[currentOption]->getCol();
-  uint8_t optionLen = this->options[currentOption]->getText().length();
+  this->title.display(lcd, this->title.getCol(), 0);
+  this->options[currentOption].display(lcd, this->options[currentOption].getCol(), 1);
+  uint8_t optionCol = this->options[currentOption].getCol();
+  uint8_t optionLen = this->options[currentOption].getText().length();
   lcd.setCursor(optionCol - 1, 1);
   lcd.write(byte(this->arrow));
 }
@@ -149,7 +145,7 @@ String LcdNav::handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t mi
 
 LcdMenu* LcdNav::handleJoyPress(bool buttonState) {
   if (buttonState == LOW) {
-    return this->options[this->currentOption]->getTargetMenu();
+    return this->options[this->currentOption].getTargetMenu();
   }
   return nullptr;
 }
@@ -165,7 +161,7 @@ uint16_t LcdInput::blinkDelay = 500;
 unsigned long long LcdInput::lastBlinked = 0;
 bool LcdInput::blinked = false;
 
-LcdInput::LcdInput(LcdText* title, uint8_t type, LcdInputBox* input, LcdMenu* prevMenu, void (*func)(String)) : LcdMenu(title, type) {
+LcdInput::LcdInput(LcdText title, uint8_t type, LcdInputBox* input, LcdMenu* prevMenu, void (*func)(String)) : LcdMenu(title, type) {
   this->input = input;
   this->prevMenu = prevMenu;
   this->func = func;
@@ -173,7 +169,7 @@ LcdInput::LcdInput(LcdText* title, uint8_t type, LcdInputBox* input, LcdMenu* pr
 
 void LcdInput::display(LiquidCrystal& lcd) {
   lcd.clear();
-  this->title->display(lcd, this->title->getCol(), 0);
+  this->title.display(lcd, this->title.getCol(), 0);
   this->input->display(lcd, this->input->getCol(), 1);
 }
 
@@ -262,7 +258,7 @@ LcdInput::~LcdInput() {
 // --------------------------------------------------------------
 // ---------------- LcdGame Function Definitions ----------------
 // --------------------------------------------------------------
-LcdGame::LcdGame(LcdText* title, uint8_t type) : LcdMenu(title, type) {
+LcdGame::LcdGame(LcdText title, uint8_t type) : LcdMenu(title, type) {
   this->score = -1;
   this->lives = -1;
   this->level = -1;
@@ -279,7 +275,7 @@ bool LcdGame::setVariables(int score, uint8_t lives, uint8_t level) {
 
 void LcdGame::display(LiquidCrystal& lcd) {
   lcd.clear();
-  this->title->display(lcd, this->title->getCol(), 0);
+  this->title.display(lcd, this->title.getCol(), 0);
   char str[17];
   snprintf(str, sizeof(str), "S:%d   L:%d Lv:%d", this->score, this->lives, this->level);
   lcd.setCursor(1, 1);
