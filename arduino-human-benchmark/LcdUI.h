@@ -54,6 +54,7 @@ class LcdMenu {
   public:
     LcdMenu(LcdText title, uint8_t type=0);
     uint8_t getType();
+    void setTitle(String newTitle="");
     virtual void display(LiquidCrystal& lcd) = 0;
     virtual String handleJoyMove(uint16_t x, uint16_t y, bool& joyMoved, uint16_t minThresh=350, uint16_t maxThresh=750) = 0;
     virtual LcdMenu* handleJoyPress(bool buttonState) = 0;
@@ -71,6 +72,7 @@ class LcdNav : public LcdMenu {
   public:
     LcdNav(LcdText title, uint8_t type=0, uint8_t nrOfOptions=0, LcdButton* options=nullptr);
     void setBackBttn(LcdButton backBttn);
+    void setBttnText(String text, short idx);
     static void initArrow(byte arrow);
     LcdButton getCurrentOption();
     void display(LiquidCrystal& lcd);

@@ -14,6 +14,15 @@ enum GAME_STATES {
 const uint16_t selectionBlinkInterval = 500;
 const uint16_t showBlinkInterval = 1000;
 
+const uint8_t pinBuzzer = 10;
+const uint16_t buzzDuration = 300;
+const uint16_t tones[SQUARE_NUMBER/3][SQUARE_NUMBER/3] = {
+  {392, 294, 328},
+  {348, 260, 440},
+  {370, 492, 310}
+};
+const uint16_t mistakeTone = 65;
+
 class LedSquare {
   private:
     uint8_t row;
@@ -50,6 +59,7 @@ class Game {
     static LedSquare squares[SQUARE_NUMBER/3][SQUARE_NUMBER/3];
     Game();
     int getScore() {return score;}
+    void addScore(int x) {score += x;}
     uint8_t getLives() {return lives;}
     uint8_t getLevel() {return level;}
     void setCurrSquare(short sqrRow, short sqrCol) {currSqrRow = sqrRow; currSqrCol = sqrCol;}
@@ -179,18 +189,21 @@ bool Game::handleJoyPress(bool buttonState, uint8_t& gameState, uint8_t* targetS
     gameState = GAME_STATES::RANDOMIZE;
     targetSqrIdx = 0;
     level++;
-    score++;  // for now score is equal to the number of levels passed - TODO: score by measuring completion time
+    score++;
     return false;
   }
   if (buttonState == LOW) {
     // get position of the target square
     short sqrRow = targetSqrArr[targetSqrIdx] / 3;
     short sqrCol = targetSqrArr[targetSqrIdx] % 3;
+    tone(pinBuzzer, tones[sqrRow][sqrCol], buzzDuration);
     if (sqrRow != currSqrRow || sqrCol != currSqrCol) {  // if the chosen square is wrong
       lives--;
+      targetSqrIdx = 0;  // reset index to show all squares in the configuration
       gameState = GAME_STATES::SHOW;  // show the user the correct configuration again
       this->wipeSquares();  // turn off all squares to prepare for the show state
-      targetSqrIdx = 0;  // reset index to show all squares in the configuration
+      tone(pinBuzzer, mistakeTone, buzzDuration);
+      delay(buzzDuration);
       return false;
     }
     else {  // chosen square is correct

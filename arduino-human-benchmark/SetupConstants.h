@@ -6,7 +6,7 @@ const uint8_t pinEnable = 3;
 const uint8_t pinD4 = 4;
 const uint8_t pinD5 = 8;
 const uint8_t pinD6 = 9;
-const uint8_t pinD7 = 10;
+const uint8_t pinD7 = A2;
 const uint8_t pinContrast = 5;
 const uint8_t pinBrightness = 6;
 

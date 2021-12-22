@@ -85,6 +85,10 @@ uint8_t LcdMenu::getType() {
   return this->type;
 }
 
+void LcdMenu::setTitle(String newTitle) {
+  this->title.setText(newTitle);
+}
+
 // --------------------------------------------------------------
 // ----------------- LcdNav Function Definitions ----------------
 // --------------------------------------------------------------
@@ -106,6 +110,10 @@ void LcdNav::initArrow(byte arrow) {
 
 void LcdNav::setBackBttn(LcdButton backBttn) {
   this->options[nrOfOptions - 1] = backBttn;
+}
+
+void LcdNav::setBttnText(String text, short idx) {
+  this->options[idx].setText(text);
 }
 
 void LcdNav::display(LiquidCrystal& lcd) {

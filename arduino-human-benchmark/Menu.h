@@ -14,8 +14,8 @@ LcdMenu* menuMain;
 LcdButton bttnMainMenu = LcdButton("Main Menu");
 // nav menus
 const uint8_t nrOfNavMenus = 4;
-LcdMenu *menuSettings, *menuUser, *menuScore, *menuAbout;
-LcdMenu** navMenus[nrOfNavMenus] = {&menuSettings, &menuUser, &menuScore, &menuAbout};
+LcdMenu *menuSettings, *menuUser, *menuScore, *menuEnd;
+LcdMenu** navMenus[nrOfNavMenus] = {&menuSettings, &menuUser, &menuScore, &menuEnd};
 // input menus
 LcdMenu *menuContrastLcd, *menuUserSet, *menuBrightnessLcd, *menuBrightnessLed;
 // game menu
@@ -27,11 +27,11 @@ void initMenus() {
   menuGame = new LcdGame(LcdText("Game Menu"), MENU_TYPES::GAME);
   // ------------------------------------------
   menuScore = new LcdNav(
-    LcdText("Score"),
+    LcdText("High Score"),
     MENU_TYPES::NAV,
     2,
     new LcdButton[2]{
-      LcdButton("High Score"),
+      LcdButton(highScoreUserName.value + String(':') +String(highScore.value)),
       bttnMainMenu
     }
   );
@@ -63,14 +63,14 @@ void initMenus() {
     &setLcdContrast
   );
   menuBrightnessLcd = new LcdInput(
-    LcdText("LCD Brightness"),
+    LcdText("LCD Bright"),
     MENU_TYPES::IN,
     new LcdInputBox(lcdBrightness.value),
     menuSettings,
     &setLcdBrightness
   );
   menuBrightnessLed = new LcdInput(
-    LcdText("LED Brightness"),
+    LcdText("LED Bright"),
     MENU_TYPES::IN,
     new LcdInputBox(ledBrightness.value),
     menuSettings,
@@ -82,8 +82,8 @@ void initMenus() {
     4,
     new LcdButton[4]{
       LcdButton("LCD Contrast", menuContrastLcd),
-      LcdButton("LCD Brightness", menuBrightnessLcd),
-      LcdButton("LED Brightness", menuBrightnessLed),
+      LcdButton("LCD Bright", menuBrightnessLcd),
+      LcdButton("LED Bright", menuBrightnessLed),
       bttnMainMenu
     }
   );
@@ -92,14 +92,12 @@ void initMenus() {
   ((LcdInput*)menuBrightnessLcd)->setPrevMenu(menuSettings);
   ((LcdInput*)menuBrightnessLed)->setPrevMenu(menuSettings);
   // --------------------------------------------
-  menuAbout = new LcdNav(
-    LcdText("About"),
+  menuEnd = new LcdNav(
+    LcdText(""),
     MENU_TYPES::NAV,
-    4,
-    new LcdButton[4]{
-      LcdButton("HumanBenchmark"),
-      LcdButton("BrihacAndrei"),
-      LcdButton("git:todo"),
+    2,
+    new LcdButton[2]{
+      LcdButton("Play Again", menuGame),
       bttnMainMenu
     }
   );
@@ -108,13 +106,12 @@ void initMenus() {
   menuMain = new LcdNav(
     LcdText("Main Menu"),
     MENU_TYPES::NAV,
-    5,
-    new LcdButton[5]{
+    4,
+    new LcdButton[4]{
       LcdButton("Start Game", menuGame),
-      LcdButton("Score", menuScore),
+      LcdButton("High Score", menuScore),
       LcdButton("User Menu", menuUser),
       LcdButton("Settings", menuSettings),
-      LcdButton("About", menuAbout)
       }
   );
   bttnMainMenu.setTargetMenu(menuMain);

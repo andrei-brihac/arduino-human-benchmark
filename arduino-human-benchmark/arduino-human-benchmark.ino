@@ -23,13 +23,6 @@ bool targetBlinked = false;
 unsigned long long targetLastBlinked = 0;
 const uint16_t animationDuration = 500;
 
-// TODO:
-// - difficulty by reducing showBlinkInterval
-// - score by measuring completion time
-// - saving EEPROM score, highscore
-// - adding buzzer tone for each square
-// - intro screen, game end screen
-
 void setup() {
   Serial.begin(9600);
   
@@ -43,6 +36,8 @@ void setup() {
   pinMode(pinJoyVy, INPUT);
   pinMode(pinJoyBttn, INPUT_PULLUP);
 
+  pinMode(pinBuzzer, OUTPUT);
+
   lcd.createChar(arrowNum, arrow);
   lcd.begin(lcdColNum, lcdRowNum);
   LcdNav::initArrow(arrowNum);
@@ -53,12 +48,25 @@ void setup() {
 
   ledControl.shutdown(0, false);
   ledControl.setIntensity(0, ledBrightness.value.toInt());
+
   randomSeed(analogRead(0));
+
+  showIntroScreen();
 }
 
 void loop() {
   handleLcdMenu();
   handleGame();
+}
+
+void showIntroScreen() {
+  LcdText title("Human Benchmark");
+  LcdText author("Brihac Andrei");
+  title.display(lcd, title.getCol(), 0);
+  author.display(lcd, author.getCol(), 1);
+  while (digitalRead(pinJoyBttn) == HIGH) {}
+  lastMenuChange = millis();
+  drawMenu = true;
 }
 
 void handleLcdMenu() {
@@ -147,7 +155,9 @@ void handleGame() {
         if (!targetBlinked) {  // we only blink each target square once, so this method is needed
           targetBlinked = true;
           targetLastBlinked = millis();
-          Game::squares[sqrRow][sqrCol].setState(Game::matrix, true);  // turn the target square on, while all others are off
+          tone(pinBuzzer, tones[sqrRow][sqrCol], buzzDuration);
+          game.wipeSquares();  // turn squares off
+          Game::squares[sqrRow][sqrCol].setState(Game::matrix, true);  // turn the target square on
         } else if (millis() - targetLastBlinked > showBlinkInterval) {
           targetBlinked = false;
           Game::squares[sqrRow][sqrCol].setState(Game::matrix, false);  // turn the target square off
@@ -173,14 +183,31 @@ void handleGame() {
   
   if (game.getLives() == 0) {
     // the user ran out of lives, reset the game for next player and wipe the display
+    checkHighScore();
     inGame = false;
-    game.wipeSquares();
     game.reset();
+    game.wipeSquares();
+    gameState = GAME_STATES::RANDOMIZE;
     // send the user to a score screen
-    currentMenu = menuMain;
+    currentMenu = menuEnd;
     drawMenu = true;
     lastMenuChange = millis();
   }
   
   game.displayGame(ledControl);
+}
+
+void checkHighScore() {
+  String endScore;
+  if (game.getScore() > highScore.value) {
+    highScore.setVal(game.getScore());
+    highScore.saveVal();
+    highScoreUserName.setVal(userName.value);
+    highScoreUserName.saveVal();
+    endScore = String("NewHighScore:");
+    ((LcdNav*)menuScore)->setBttnText(highScoreUserName.value + String(':') + String(highScore.value), 0);
+  }
+  else {endScore = userName.value + String(':');}
+  endScore += String(game.getScore());
+  menuEnd->setTitle(endScore);
 }

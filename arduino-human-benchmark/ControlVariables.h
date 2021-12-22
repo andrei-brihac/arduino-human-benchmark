@@ -52,9 +52,11 @@ template<> void eeVar<String>::readVal() {
 }
 
 eeVar<int> lcdContrast(350, eeAddr);
+eeVar<int> highScore(0, eeAddr);
 eeVar<String> lcdBrightness("255", eeAddr);
 eeVar<String> ledBrightness("05", eeAddr);
 eeVar<String> userName("        ", eeAddr);
+eeVar<String> highScoreUserName("        ", eeAddr);
 
 void clearEEPROM() {
   for (int i = 0; i < EEPROM.length(); i++) {
@@ -64,9 +66,11 @@ void clearEEPROM() {
 
 void readControlVariables() {
   lcdContrast.readVal();
-  userName.readVal();
   lcdBrightness.readVal();
   ledBrightness.readVal();
+  userName.readVal();
+  highScore.readVal();
+  highScoreUserName.readVal();
 }
 
 void setLcdContrast(String newContrast) {
