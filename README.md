@@ -37,6 +37,7 @@ Here's a list of the components I used to build this project:
 * an electrolytic capacitor of 10 microfarads and a ceramic capacitor of 104 picofarads for filtering circuit noise
 * an active buzzer for the sound
 * a joystick for the player input
+* wires and resistors per logic
 
 ## Progress Updates
 
