@@ -5,6 +5,36 @@
 #include "Menu.h"
 #include "Game.h"
 
+/*
+  Part 1 - the menu:
+  - The menus are handled using runtime polymorphism (don't do it like me if you value your sanity).
+  - The base abstract class is LcdMenu and we keep a pointer of this type to the current menu.
+  - The main methods are handleJoyMove and handleJoyPress which do different things depending on the runtime type of the LcdMenu pointer.
+  - Check LcdUi.h for class definitions and LcdUi.cpp for the implementations of each derived class functions.
+  - My implementation has two main flaws:
+    - it runs out of memory really fast due to the huge overhead of classes and pointers (I only had 2 megabytes on the Arduino Uno)
+    - the algorithm used to compute the memory usage of the sketch doesn't work that well with pointers to objects (my assumption)
+  - The completed program reports only 43% of dynamic memory usage, but signs of overwriting memory locations appear when declaring new variables, especially arrays.
+  - The menus are linked with eachother during setup, check Menu.h for declarations and linking.
+  - Input menus have a pointer to a function that gets executed when the user presses the joystick button. (a function to save each variable - check ControlVariables.h)
+  - I had to cut some corners with the implementation of certain features, but I think it turned out well.
+
+  Part 2 - the game: (https://humanbenchmark.com/tests/sequence - play this first to see how it works)
+  - It has three game states: SELECTION, SHOW and RANDOMIZE.
+    - RANDOMIZE does the addition of a new target square to the sequence the player has to remember
+    - SHOW displays the target sequence to the user
+    - SELECTION waits for input from the user and checks against the target sequence
+  - For the detailed implementation check the comments inside the handleGame() function below. (also look in Game.h for the other game functions)
+
+  Part 3 - EEPROM saving: (check ControlVariables.h)
+  - I used a template class for storing each variable because I wanted to save different data types. (ended up using just String and int)
+  - The order in which they are declared matters because each declaration modifies the EEPROM adress at which they are stored.
+  - Having the data type and EEPROM adress contained within each class variable, I can easily read and update the values. (also easy to add new variables)
+  - A string is saved by storing its length at the first byte of the adress. (new strings should be declared with a default value of empty spaces equal to max length)
+
+  I hope the other comments I wrote are enough to make sense of the abomination that is my code.
+*/
+
 LiquidCrystal lcd(pinRS, pinEnable, pinD4, pinD5, pinD6, pinD7);
 LcdMenu* currentMenu;
 bool drawMenu = false;
