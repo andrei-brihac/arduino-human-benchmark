@@ -2,7 +2,7 @@
 
 ## Introduction
 
-An Arduino sequencing memory game, an implementation of [Human Benchmark Sequencing](https://humanbenchmark.com/tests/sequence).
+An Arduino sequence memory game, an implementation of [Human Benchmark - Sequence](https://humanbenchmark.com/tests/sequence).
 
 Initially, I wanted to implement all the games from the **Human Benchmark** site, but I stumbled into some memory limitations which forced me to compromise on design choices and code architecture.
 
